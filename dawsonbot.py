@@ -1,11 +1,7 @@
-from ast import Bytes
-from tokenize import String
-
 import cv2
 import pytesseract
 import argparse
 import time
-import numpy as np
 
 from PIL import Image
 from selenium import webdriver
@@ -104,19 +100,29 @@ def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
     driver.find_element(by="id", value="menu-dropdown-2-contents").click()
     time.sleep(2)
 
-    # driver.find_element(by="id", value="VendorName").click()
-    # driver.find_element(by="id", value="VendorName").send_keys("MITRA")
-    # time.sleep(1)
-    # driver.find_element(by="id", value="VendorName").send_keys(Keys.DOWN)
-    # driver.find_element(by="id", value="VendorName").send_keys(Keys.ENTER)
-    # time.sleep(1)
+    driver.find_element(by="id", value="VendorName").click()
+    driver.find_element(by="id", value="VendorName").send_keys("MITRA")
+    time.sleep(1)
+    driver.find_element(by="id", value="VendorName").send_keys(Keys.DOWN)
+    driver.find_element(by="id", value="VendorName").send_keys(Keys.ENTER)
+    time.sleep(1)
 
+    driver.find_element(by="id", value="IdStreetAddress").click()
+    driver.find_element(by="id", value="IdStreetAddress").clear()
     driver.find_element(by="id", value="IdStreetAddress").send_keys("16810 Oriole Rd, Suite 7")
+    driver.find_element(by="id", value="IdCity").click()
+    driver.find_element(by="id", value="IdCity").clear()
     driver.find_element(by="id", value="IdCity").send_keys("Fort Myers")
+    driver.find_element(by="id", value="IdState").click()
+    driver.find_element(by="id", value="IdState").clear()
     driver.find_element(by="id", value="IdState").send_keys("FL")
+    driver.find_element(by="id", value="IdZipCode").click()
+    driver.find_element(by="id", value="IdZipCode").clear()
     driver.find_element(by="id", value="IdZipCode").send_keys("33912")
+    driver.find_element(by="id", value="IdCountry").click()
+    driver.find_element(by="id", value="IdCountry").clear()
     driver.find_element(by="id", value="IdCountry").send_keys("US")
-    driver.find_element(by="id", value="InvDate").send_keys(datetime.now().strftime("%m/%d/%Y"))
+    driver.find_element(by="id", value="InvDate").click()
 
     for i, description in enumerate(descriptions):
         if description == 'Keg Deposit':
