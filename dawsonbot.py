@@ -42,6 +42,7 @@ def read_img():
     #     print(f"Line {i}: {line}")
     return lines
 
+
 def process_lines(lines):
     """ Break out processed text from image into lists """
     descriptions = []
@@ -71,13 +72,10 @@ def process_lines(lines):
             discounts = lines[i+count+1:i+count+count+1]
 
 
-    print(len(descriptions))
-    print(descriptions)
-    print(len(quantities))
-    print(quantities)
-    print(len(unit_prices))
-    print(len(discounts))
+    for i, description in enumerate(descriptions):
+        print(f"{i} - Description: {descriptions[i]}, Quantity: {quantities[i]}, Unit Price: {unit_prices[i]}, Discount: {discounts[i]}")
     return descriptions, quantities, unit_prices, discounts
+
 
 def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
     """ Selenium script to login to website and input inventory """
@@ -146,6 +144,9 @@ def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
 
 lines = read_img()
 descriptions, quantities, unit_prices, discounts = process_lines(lines)
-make_dawsons_day(descriptions, quantities, unit_prices, discounts)
-
-print("--- Inventory finished in %s seconds ---" % round((time.time() - start_time)), 3)
+text = input("Does this look right? y/n\n")
+if text == 'y':
+    make_dawsons_day(descriptions, quantities, unit_prices, discounts)
+    print("--- Inventory finished in %s seconds ---" % round((time.time() - start_time)), 3)
+else:
+    text = input("Try taking another screenshot and inputting the image again. sowwy :(")
