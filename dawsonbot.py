@@ -14,6 +14,9 @@ start_time = time.time()
 email = ""
 pw = ""
 
+print("Dawsonbot intializing...\n")
+time.sleep(1)
+
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-i", "--image", required=True, help="SalesOrder_img.png")
@@ -73,7 +76,7 @@ def process_lines(lines):
 
 
     for i, description in enumerate(descriptions):
-        print(f"{i} - Description: {descriptions[i]}, Quantity: {quantities[i]}, Unit Price: {unit_prices[i]}, Discount: {discounts[i]}")
+        print(f"{i}. {descriptions[i]}:\n    Quantity: {quantities[i]}\n    Unit Price: {unit_prices[i]}\n    Discount: {discounts[i]}")
     return descriptions, quantities, unit_prices, discounts
 
 
@@ -126,7 +129,7 @@ def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
         if description == 'Keg Deposit':
             continue
         driver.find_element(by="id", value="DivAddLineItem").click()
-        time.sleep(2)
+        time.sleep(1)
         row = driver.find_element(by="id", value=f"{i}")
         row.find_element(by="id", value=f"ItemDescription_{i}").click()
         row.find_element(by="id", value=f"ItemDescription_{i}").send_keys(description[:10])
