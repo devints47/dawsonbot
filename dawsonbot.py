@@ -32,12 +32,10 @@ def read_img():
 
     # load the image and convert it to grayscale
     image = cv2.imread(args["image"])
-    cv2.imshow("Original", image)
 
     # Apply an "average" blur to the image
 
     blurred = cv2.blur(image, (3,3))
-    cv2.imshow("Blurred_image", blurred)
     img = Image.fromarray(blurred)
     text = pytesseract.image_to_string(img, lang='eng')
     lines = text.split("\n")
@@ -56,27 +54,45 @@ def process_lines(lines):
     for i, line in enumerate(lines):
         if line == '':
             lines.pop(i)
+        if "Item" in line:
+            lines.pop(i)
 
     for i, line in enumerate(lines):
         print(f"Line {i}: {line}")
-    for i, line in enumerate(lines):
-        if "Kratom" in line:
-            lines[i] = lines[i].replace("Kratom", "Mitra")
-        if "Quantity" in line:
-            descriptions = lines[0:i]
-            count = i
-            quantities = lines[i+1:i+count+1]
 
-        if "Unit Price" in line and "Discount" in line:
+    for line in lines:
+        if "Kratom" in line:
+            line = line.replace("Kratom", "Mitra")
+            descriptions.append(str(line))
+        elif "Kava" in line:
+            descriptions.append(str(line))
+        elif "Keg" in line:
+            descriptions.append(line)
+
+
+    count = len(descriptions)
+    del lines[0:len(descriptions)]
+
+    print(descriptions)
+    print(len(descriptions))
+    #
+    # for i, line in enumerate(lines):
+    #     print(f"Line {i}: {line}")
+    for i, line in enumerate(lines):
+        if "Quantity" in line:
+            quantities = lines[i+1:i+count+1]
+            print("hit quantity")
+
+        if "Unit" in line:
             unit_prices = lines[i+1:i+count+1]
-            discounts = lines[i+count:i+count+count]
-        elif "Unit Price" in line and "Discount" not in line:
-            unit_prices = lines[i+1:i+count+1]
-            discounts = lines[i+count+1:i+count+count+1]
+            print("hit unite price")
+
+    print(len(descriptions), len(quantities), len(unit_prices))
+
 
 
     for i, description in enumerate(descriptions):
-        print(f"{i}. {descriptions[i]}:\n    Quantity: {quantities[i]}\n    Unit Price: {unit_prices[i]}\n    Discount: {discounts[i]}")
+        print(f"{i}. {descriptions[i]}:\n    Quantity: {quantities[i]}\n    Unit Price: {unit_prices[i]}\n")
     return descriptions, quantities, unit_prices, discounts
 
 
@@ -90,7 +106,10 @@ def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
     driver.find_element(by="id", value="password").send_keys(pw)
     driver.find_element(by="name", value="action").click()
     time.sleep(1)
-    driver.find_elements(by="name", value="action")[2].click()
+    try:
+        driver.find_elements(by="name", value="action")[2].click()
+    except:
+        pass
     time.sleep(1)
     driver.find_element(by="id", value="btnAllowParallelLogin").click()
     time.sleep(1)
@@ -123,7 +142,6 @@ def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
     driver.find_element(by="id", value="IdCountry").click()
     driver.find_element(by="id", value="IdCountry").clear()
     driver.find_element(by="id", value="IdCountry").send_keys("US")
-    driver.find_element(by="id", value="InvDate").click()
 
     for i, description in enumerate(descriptions):
         if description == 'Keg Deposit':
@@ -152,4 +170,4 @@ if text == 'y':
     make_dawsons_day(descriptions, quantities, unit_prices, discounts)
     print("--- Inventory finished in %s seconds ---" % round((time.time() - start_time)), 3)
 else:
-    text = input("Try taking another screenshot and inputting the image again. sowwy :(")
+    print("Try taking another screenshot and inputting the image again. sowwy :(")
