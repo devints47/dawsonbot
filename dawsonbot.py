@@ -67,7 +67,7 @@ def process_lines(lines):
         elif "Kava" in line:
             descriptions.append(str(line))
         elif "Keg" in line:
-            descriptions.append(line)
+            descriptions.append(str(line))
 
 
     count = len(descriptions)
@@ -85,7 +85,7 @@ def process_lines(lines):
 
         if "Unit" in line:
             unit_prices = lines[i+1:i+count+1]
-            print("hit unite price")
+            print("hit unit price")
 
     print(len(descriptions), len(quantities), len(unit_prices))
 
