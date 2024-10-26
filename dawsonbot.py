@@ -5,6 +5,7 @@ import time
 
 from PIL import Image
 from selenium import webdriver
+from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from datetime import datetime
@@ -56,8 +57,16 @@ def process_lines(lines):
             lines.pop(i)
         if "Item" in line:
             lines.pop(i)
+        if line == "Price":
+            lines.pop(i)
 
     for i, line in enumerate(lines):
+        if line == '':
+            lines.pop(i)
+        if "Item" in line:
+            lines.pop(i)
+        if line == "Price":
+            lines.pop(i)
         print(f"Line {i}: {line}")
 
     for line in lines:
@@ -114,8 +123,11 @@ def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
     except:
         pass
     time.sleep(1)
-    driver.find_element(by="id", value="btnAllowParallelLogin").click()
-    time.sleep(1)
+    try:
+        driver.find_element(by="id", value="btnAllowParallelLogin").click()
+        time.sleep(1)
+    except:
+        pass
     driver.get('https://app.xtrachef.com/Invoice/Invoice/InvoiceList')
     time.sleep(1)
     driver.find_element(by="id", value="menu-dropdown-2").click()
@@ -149,9 +161,15 @@ def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
     for i, description in enumerate(descriptions):
         if description == 'Keg Deposit':
             continue
+        WebDriverWait(driver, 3).until(lambda driver: driver.find_element(by="id", value="DivAddLineItem"))
         driver.find_element(by="id", value="DivAddLineItem").click()
         time.sleep(1)
-        row = driver.find_element(by="id", value=f"{i}")
+        try:
+            row = driver.find_element(by="id", value=f"{i}")
+        except:
+            driver.find_element(by="id", value="DivAddLineItem").click()
+            time.sleep(1)
+            row = driver.find_element(by="id", value=f"{i}")
         row.find_element(by="id", value=f"ItemDescription_{i}").click()
         row.find_element(by="id", value=f"ItemDescription_{i}").send_keys(description[:10])
         time.sleep(1)
@@ -171,6 +189,6 @@ descriptions, quantities, unit_prices, discounts = process_lines(lines)
 text = input("Does this look right? y/n\n")
 if text == 'y':
     make_dawsons_day(descriptions, quantities, unit_prices, discounts)
-    print("--- Inventory finished in %s seconds ---" % round((time.time() - start_time)), 3)
+    print("--- Inventory finished in %s seconds ---" % round((time.time() - start_time), 3))
 else:
     print("Try taking another screenshot and inputting the image again. sowwy :(")
