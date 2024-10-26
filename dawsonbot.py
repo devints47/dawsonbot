@@ -89,7 +89,10 @@ def process_lines(lines):
 
     print(len(descriptions), len(quantities), len(unit_prices))
 
-
+    if len(quantities) == 0:
+        quantities = [0]*len(descriptions)
+    if len(unit_prices) == 0:
+        unit_prices = [0]*len(descriptions)
 
     for i, description in enumerate(descriptions):
         print(f"{i}. {descriptions[i]}:\n    Quantity: {quantities[i]}\n    Unit Price: {unit_prices[i]}\n")
