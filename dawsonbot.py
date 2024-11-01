@@ -6,8 +6,10 @@ import time
 from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
+from glob import glob
 from datetime import datetime
 
 start_time = time.time()
@@ -15,26 +17,23 @@ start_time = time.time()
 email = ""
 pw = ""
 
-print("Dawsonbot intializing...\n")
-time.sleep(1)
+print("\033[32;5mDawsonbot intializing...\033[0m\n")
+time.sleep(2)
 
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-i", "--image", required=True, help="SalesOrder_img.png")
+ap.add_argument("-i", "--image", help="SalesOrder_img.png")
+ap.add_argument("-a", "--all", action='store_true', help="All images in directory")
 
 chrome_options = Options()
 chrome_options.add_experimental_option("detach", True)
 
-def read_img():
+def read_img(image_filename=None):
     """ Read image and convert to text """
-    # construct the argument parser and parse the arguments
-
-    args = vars(ap.parse_args())
-
-    # load the image and convert it to grayscale
-    image = cv2.imread(args["image"])
-
-    # Apply an "average" blur to the image
+    if image_filename is None:
+        image = cv2.imread(args.image)
+    else:
+        image = cv2.imread(image_filename)
 
     blurred = cv2.blur(image, (3,3))
     img = Image.fromarray(blurred)
@@ -50,7 +49,6 @@ def process_lines(lines):
     descriptions = []
     quantities = []
     unit_prices = []
-    discounts = []
 
     for i, line in enumerate(lines):
         if line == '':
@@ -82,21 +80,14 @@ def process_lines(lines):
     count = len(descriptions)
     del lines[0:len(descriptions)]
 
-    print(descriptions)
-    print(len(descriptions))
-    #
-    # for i, line in enumerate(lines):
-    #     print(f"Line {i}: {line}")
     for i, line in enumerate(lines):
         if "Quantity" in line:
             quantities = lines[i+1:i+count+1]
-            print("hit quantity")
 
         if "Unit" in line:
             unit_prices = lines[i+1:i+count+1]
-            print("hit unit price")
 
-    print(len(descriptions), len(quantities), len(unit_prices))
+    print(f"--- Array Length: {len(descriptions)}, {len(quantities)}, {len(unit_prices)} ---")
 
     if len(quantities) == 0:
         quantities = [0]*len(descriptions)
@@ -105,11 +96,10 @@ def process_lines(lines):
 
     for i, description in enumerate(descriptions):
         print(f"{i}. {descriptions[i]}:\n    Quantity: {quantities[i]}\n    Unit Price: {unit_prices[i]}\n")
-    return descriptions, quantities, unit_prices, discounts
+    return descriptions, quantities, unit_prices
 
 
-def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
-    """ Selenium script to login to website and input inventory """
+def login():
     driver = webdriver.Chrome(options=chrome_options)
     driver.get('https://app.xtrachef.com/XtraChefAccount/Account/LogOn')
     driver.find_element(by='id', value='username').send_keys(email)
@@ -128,6 +118,21 @@ def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
         time.sleep(1)
     except:
         pass
+    try:
+        driver.find_element(by="id", value="select2-roleId-container").click()
+        driver.find_element(By.CLASS_NAME, value="select2-search__field").click()
+        driver.find_element(By.CLASS_NAME, value="select2-search__field").send_keys(Keys.DOWN)
+        driver.find_element(By.CLASS_NAME, value="select2-search__field").send_keys(Keys.DOWN)
+        driver.find_element(By.CLASS_NAME, value="select2-search__field").send_keys(Keys.ENTER)
+        driver.find_element(by="id", value="btnSelect").click()
+        time.sleep(1)
+    except:
+        pass
+    return driver
+
+
+def input_inventory(descriptions, quantities, unit_prices, driver=None):
+    """ Selenium script to login to website and input inventory """
     driver.get('https://app.xtrachef.com/Invoice/Invoice/InvoiceList')
     time.sleep(1)
     driver.find_element(by="id", value="menu-dropdown-2").click()
@@ -171,7 +176,7 @@ def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
             time.sleep(1)
             row = driver.find_element(by="id", value=f"{i}")
         row.find_element(by="id", value=f"ItemDescription_{i}").click()
-        row.find_element(by="id", value=f"ItemDescription_{i}").send_keys(description[:10])
+        row.find_element(by="id", value=f"ItemDescription_{i}").send_keys(description[:23])
         time.sleep(1)
         row.find_element(by="id", value=f"ItemDescription_{i}").send_keys(Keys.DOWN)
         row.find_element(by="id", value=f"ItemDescription_{i}").send_keys(Keys.ENTER)
@@ -182,13 +187,43 @@ def make_dawsons_day(descriptions, quantities, unit_prices, discounts):
 
     return
 
+# construct the argument parser and parse the arguments
+args = ap.parse_args()
 
+# If all images selected, loop through the images and process them, else process for the selected image
+if args.all:
+    images = glob("*.png")
+    skipped_files = []
+    for i, image in enumerate(images):
+        lines = read_img(image)
+        descriptions, quantities, unit_prices = process_lines(lines)
+        print(f"--- Iteration {i+1} ---")
+        text = input(f"Table processed for '{image}'. Does this look right? y/n\n")
+        if text == 'y':
+            if i == 0:
+                driver = login()
+            input_inventory(descriptions, quantities, unit_prices, driver)
+        else:
+            print(f"Skipping '{image}' and moving on to the next file.")
+            skipped_files.append(image)
 
-lines = read_img()
-descriptions, quantities, unit_prices, discounts = process_lines(lines)
-text = input("Does this look right? y/n\n")
-if text == 'y':
-    make_dawsons_day(descriptions, quantities, unit_prices, discounts)
-    print("--- Inventory finished in %s seconds ---" % round((time.time() - start_time), 3))
+    print("--- End of List ---")
+    if skipped_files:
+        print(f"Skipped files: {skipped_files}")
+    else:
+        print("No files skipped!")
+    print("Inventory finished in %s seconds" % round((time.time() - start_time), 3))
+    print("Dawson-bot shutting down...")
+
 else:
-    print("Try taking another screenshot and inputting the image again. sowwy :(")
+    lines = read_img()
+    descriptions, quantities, unit_prices = process_lines(lines)
+    text = input(f"Table processed for '{args.image}'. Does this look right? y/n\n")
+    if text == 'y':
+        driver = login()
+        input_inventory(descriptions, quantities, unit_prices, driver)
+        print("--- Inventory finished in %s seconds ---" % round((time.time() - start_time), 3))
+    else:
+        print("Try taking another screenshot and inputting the image again. sowwy :(")
+        print("Dawson-bot shutting down...")
+
