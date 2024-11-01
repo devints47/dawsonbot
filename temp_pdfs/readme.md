@@ -1,0 +1,1 @@
+This folder contains a temporary copy of the PDFs that get scaled up and converted to PNGs. The script will take the original PDFs from the `original_pdfs` folder and fix them by scaling them up and converting them to PNGs and saving them in the `fixed_pngs` folder. The temporary PDFs are stored in this folder before they are fixed.

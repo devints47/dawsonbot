@@ -1,0 +1,1 @@
+Contains all of the fixed PNGs. These are the images that have been fixed by the script. The script will take the original PDFs from the `original_pdfs` folder and fix them by scaling them up and converting them to PNGs and saving them in this folder.

@@ -1,0 +1,1 @@
+This directory contains  the original PDFs that will have the tables cropped out and converted to PNGs
