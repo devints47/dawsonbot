@@ -1,3 +1,4 @@
+import os
 import cv2
 import pytesseract
 import argparse
@@ -9,8 +10,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
-from glob import glob
-from datetime import datetime
 
 start_time = time.time()
 
@@ -57,6 +56,8 @@ def process_lines(lines):
             lines.pop(i)
         if line == "Price":
             lines.pop(i)
+        if line == "Discount":
+            lines.pop(i)
 
     for i, line in enumerate(lines):
         if line == '':
@@ -64,6 +65,8 @@ def process_lines(lines):
         if "Item" in line:
             lines.pop(i)
         if line == "Price":
+            lines.pop(i)
+        if line == "Discount":
             lines.pop(i)
         print(f"Line {i}: {line}")
 
@@ -91,8 +94,14 @@ def process_lines(lines):
 
     if len(quantities) == 0:
         quantities = [0]*len(descriptions)
+    else:
+        for i, quantity in enumerate(quantities):
+            quantities[i] = quantity.split(" ")[0]
     if len(unit_prices) == 0:
         unit_prices = [0]*len(descriptions)
+    else:
+        for i, unit_price in enumerate(unit_prices):
+            unit_prices[i] = unit_price.split(" ")[0]
 
     for i, description in enumerate(descriptions):
         print(f"{i}. {descriptions[i]}:\n    Quantity: {quantities[i]}\n    Unit Price: {unit_prices[i]}\n")
@@ -164,7 +173,7 @@ def input_inventory(descriptions, quantities, unit_prices, driver=None):
     driver.find_element(by="id", value="IdCountry").send_keys("US")
 
     for i, description in enumerate(descriptions):
-        if description == 'Keg Deposit':
+        if 'Keg Deposit' in description:
             continue
         WebDriverWait(driver, 3).until(lambda driver: driver.find_element(by="id", value="DivAddLineItem"))
         driver.find_element(by="id", value="DivAddLineItem").click()
@@ -192,10 +201,14 @@ args = ap.parse_args()
 
 # If all images selected, loop through the images and process them, else process for the selected image
 if args.all:
-    images = glob("*.png")
+    images = []
+    for image in os.listdir("fixed_pngs"):
+        if image.endswith(".png"):
+            images.append(image)
+
     skipped_files = []
     for i, image in enumerate(images):
-        lines = read_img(image)
+        lines = read_img(f"fixed_pngs/{image}")
         descriptions, quantities, unit_prices = process_lines(lines)
         print(f"--- Iteration {i+1} ---")
         text = input(f"Table processed for '{image}'. Does this look right? y/n\n")
@@ -213,7 +226,7 @@ if args.all:
     else:
         print("No files skipped!")
     print("Inventory finished in %s seconds" % round((time.time() - start_time), 3))
-    print("Dawson-bot shutting down...")
+    print("Dawsonbot shutting down...")
 
 else:
     lines = read_img()
@@ -225,5 +238,5 @@ else:
         print("--- Inventory finished in %s seconds ---" % round((time.time() - start_time), 3))
     else:
         print("Try taking another screenshot and inputting the image again. sowwy :(")
-        print("Dawson-bot shutting down...")
+        print("Dawsonbot shutting down...")
 
