@@ -208,13 +208,14 @@ if args.all:
 
     skipped_files = []
     completed_files = []
+    logged_in = False
     for i, image in enumerate(images):
         lines = read_img(f"fixed_pngs/{image}")
         descriptions, quantities, unit_prices = process_lines(lines)
         print(f"--- Iteration {i+1} ---")
         text = input(f"Table processed for '{image}'. Does this look right? y/n\n")
         if text == 'y':
-            if i == 0:
+            if logged_in is False:
                 driver = login()
             input_inventory(descriptions, quantities, unit_prices, driver)
             completed_files.append(image)
