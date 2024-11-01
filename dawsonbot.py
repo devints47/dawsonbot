@@ -207,6 +207,7 @@ if args.all:
             images.append(image)
 
     skipped_files = []
+    completed_files = []
     for i, image in enumerate(images):
         lines = read_img(f"fixed_pngs/{image}")
         descriptions, quantities, unit_prices = process_lines(lines)
@@ -216,11 +217,14 @@ if args.all:
             if i == 0:
                 driver = login()
             input_inventory(descriptions, quantities, unit_prices, driver)
+            completed_files.append(image)
         else:
             print(f"Skipping '{image}' and moving on to the next file.")
             skipped_files.append(image)
 
     print("--- End of List ---")
+    if completed_files:
+        print(f"Completed files: {completed_files}")
     if skipped_files:
         print(f"Skipped files: {skipped_files}")
     else:
@@ -239,4 +243,3 @@ else:
     else:
         print("Try taking another screenshot and inputting the image again. sowwy :(")
         print("Dawsonbot shutting down...")
-
